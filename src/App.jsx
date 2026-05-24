@@ -63,6 +63,8 @@ function SignatureLine() {
   );
 }
 
+// Sample data
+
 const SAMPLE = [
   { id: "S-001", name: "Junaid Ghani", fname: "Adnan Ghani", cls: "Six Red", roll: "01", expiry: "31-03-2027", issueDate: "01-04-2026", contact: "0300-1234567", address: "Lahore", photo: null },
   { id: "S-002", name: "Malik M.Yasir", fname: "Malik Abdul Ghafoor", cls: "Ten Red", roll: "02", expiry: "31-03-2026", issueDate: "01-04-2025", contact: "0316-0990588", address: "Bara Gate, Bara Road Peshawar", photo: null },
@@ -73,6 +75,7 @@ const SAMPLE = [
   { id: "S-007", name: "Zubair Khan", fname: "Liaqat Khan", cls: "Nine Blue", roll: "07", expiry: "31-03-2026", issueDate: "01-04-2025", contact: "0311-9876543", address: "Tehkal Bala, Peshawar", photo: null },
 ];
 
+// Card Front
 function CardFront({ s, schoolName }) {
   return (
     <CardShell>
@@ -104,7 +107,7 @@ function CardFront({ s, schoolName }) {
     </CardShell>
   );
 }
-
+// Card Back
 function CardBack({ s, schoolName, phone, address: schoolAddr, expiry: defaultExpiry, issue: defaultIssue, logo }) {
   const exp = s.expiry || defaultExpiry;
   const iss = s.issueDate || defaultIssue;
