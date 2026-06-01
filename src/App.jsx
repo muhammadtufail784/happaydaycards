@@ -53,13 +53,130 @@ function SchoolCrest({ logo, size = 120 }) {
   );
 }
 
-function SignatureLine() {
+function StudentPhoto({ photo, name }) {
+  const frameStyle = {
+    width: "100%",
+    aspectRatio: "3/3.6",
+    border: "2px solid #fff",
+    display: "block",
+  };
+
   return (
-    <img
-      src={happydaySign}
-      alt=""
-      style={{ width: "88%", height: "auto", display: "block", margin: "1px auto 0", objectFit: "contain" }}
-    />
+    <div style={{ position: "relative", width: "100%", paddingBottom: "11%" }}>
+      <div style={{ position: "relative", width: "100%", isolation: "isolate" }}>
+        {photo ? (
+          <img src={photo} alt={name} style={{ ...frameStyle, objectFit: "cover" }} />
+        ) : (
+          <div style={{ ...frameStyle, background: "#c8d8e8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2em", color: "#666" }}>
+            👤
+          </div>
+        )}
+        <img
+          src={happydaySign}
+          alt=""
+          className="card-photo-sign"
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "100%",
+            transform: "translate(-50%, -50%)",
+            width: "94%",
+            height: "auto",
+            objectFit: "contain",
+            pointerEvents: "none",
+            zIndex: 2,
+            mixBlendMode: "screen",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// Banner reference: 52px / 28px / 16px — scaled to card via mm (≈52px cap on ~55mm card)
+const CARD_HEADING_BASE_MM = "6.85mm";
+const CARD_TITLE_FONT = "'Montserrat', 'Arial Black', sans-serif";
+const CARD_SCHOOL_FONT = "'Poppins', 'Century Gothic', sans-serif";
+const CARD_TAGLINE_FONT = "'Poppins', Arial, sans-serif";
+
+function CardHeading({ schoolName, tagline = "Playgroup to Matric", showStudentCard = false }) {
+  const title = String(schoolName || "HAPPYDAY").toUpperCase();
+  const range = tagline ? `(${tagline.replace(/^\(|\)$/g, "").trim()})` : "";
+
+  return (
+    <div
+      className="card-heading"
+      style={{
+        position: "absolute",
+        top: "2%",
+        left: "3%",
+        right: "3%",
+        textAlign: "center",
+        fontSize: CARD_HEADING_BASE_MM,
+        lineHeight: 1,
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        className="card-heading__title"
+        style={{
+          fontFamily: CARD_TITLE_FONT,
+          fontSize: "1em",
+          fontWeight: 900,
+          color: "#000",
+          letterSpacing: "-0.02em",
+          lineHeight: 0.88,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {title}
+      </div>
+      <div
+        className="card-heading__school"
+        style={{
+          fontFamily: CARD_SCHOOL_FONT,
+          fontSize: "0.538em",
+          fontWeight: 600,
+          color: "#000",
+          letterSpacing: "0.06em",
+          lineHeight: 0.94,
+          marginTop: "-0.04em",
+        }}
+      >
+        School System
+      </div>
+      {range ? (
+        <div
+          className="card-heading__tagline"
+          style={{
+            fontFamily: CARD_TAGLINE_FONT,
+            fontSize: "0.308em",
+            fontWeight: 500,
+            color: "#000",
+            lineHeight: 0.98,
+            marginTop: "0.06em",
+          }}
+        >
+          {range}
+        </div>
+      ) : null}
+      {showStudentCard ? (
+        <div
+          className="card-heading__badge"
+          style={{
+            fontFamily: CARD_SCHOOL_FONT,
+            fontSize: "0.346em",
+            fontWeight: 600,
+            color: "#9a2f0a",
+            letterSpacing: "0.05em",
+            lineHeight: 1,
+            marginTop: "0.14em",
+          }}
+        >
+          STUDENT CARD
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -75,67 +192,103 @@ const SAMPLE = [
   { id: "S-007", name: "Zubair Khan", fname: "Liaqat Khan", cls: "Nine Blue", roll: "07", expiry: "31-03-2026", issueDate: "01-04-2025", contact: "0311-9876543", address: "Tehkal Bala, Peshawar", photo: null },
 ];
 
+function CardStudentFields({ name, fname, cls }) {
+  const labelCol = "5.6em";
+
+  return (
+    <div
+      className="card-student-fields"
+      style={{
+        position: "absolute",
+        bottom: "3.2%",
+        left: "6.5%",
+        right: "4%",
+        fontFamily: CARD_SCHOOL_FONT,
+        fontSize: "3.15mm",
+        fontWeight: 700,
+        color: "#000",
+        lineHeight: 1,
+      }}
+    >
+      {[
+        ["Name:", name],
+        ["F/Name:", fname],
+        ["Class:", cls],
+      ].map(([label, value]) => (
+        <div
+          key={label}
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            marginBottom: label === "Class:" ? 0 : "0.55em",
+          }}
+        >
+          <span style={{ width: labelCol, flexShrink: 0 }}>{label}</span>
+          <span style={{ paddingLeft: "0.35em" }}>{value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Card Front
-function CardFront({ s, schoolName }) {
+function CardFront({ s, schoolName, tagline }) {
   return (
     <CardShell>
-      <div style={{ position: "absolute", top: "3%", left: 0, right: 0, textAlign: "center", lineHeight: 1.12, padding: "0 4px" }}>
-        <div style={{ fontSize: "1.05em", fontWeight: 900, color: "#111", letterSpacing: 0.4, fontFamily: "'Arial Black', Arial, sans-serif" }}>{schoolName}</div>
-        <div style={{ fontSize: "0.52em", fontWeight: 800, color: "#111" }}>School System</div>
-        <div style={{ fontSize: "0.45em", fontWeight: 700, color: "#111" }}>(Playgroup to Matric)</div>
-        <div style={{ fontSize: "0.48em", fontWeight: 900, color: "#cc0000", letterSpacing: 0.8, marginTop: 1 }}>STUDENT CARD</div>
-      </div>
+      <CardHeading schoolName={schoolName} tagline={tagline} showStudentCard />
 
       <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: "52%", textAlign: "center" }}>
-        {s.photo ? (
-          <img src={s.photo} alt={s.name} style={{ width: "100%", aspectRatio: "3/3.6", objectFit: "cover", border: "2px solid #fff", display: "block" }} />
-        ) : (
-          <div style={{ width: "100%", aspectRatio: "3/3.6", background: "#c8d8e8", border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2em", color: "#666" }}>👤</div>
-        )}
-        <SignatureLine />
+        <StudentPhoto photo={s.photo} name={s.name} />
       </div>
 
-      <div style={{ position: "absolute", top: "62%", left: 0, right: 0, textAlign: "center", fontSize: "0.42em", fontWeight: 700, color: "#cc0000", fontStyle: "italic" }}>
+      <div style={{ position: "absolute", top: "60.5%", left: 0, right: 0, textAlign: "center", fontSize: "0.42em", fontWeight: 700, color: "#cc0000", fontStyle: "italic" }}>
         Issuing Authority
       </div>
 
-      <div style={{ position: "absolute", bottom: "4%", left: "8%", right: "6%", fontSize: "0.46em", fontWeight: 700, color: "#111", lineHeight: 1.55, fontFamily: "Arial, sans-serif" }}>
-        <div><b>Name:</b>&nbsp;&nbsp;{s.name}</div>
-        <div><b>F/Name:</b>&nbsp;{s.fname}</div>
-        <div><b>Class:</b>&nbsp;&nbsp;&nbsp;{s.cls}</div>
-      </div>
+      <CardStudentFields name={s.name} fname={s.fname} cls={s.cls} />
     </CardShell>
   );
 }
 // Card Back
-function CardBack({ s, schoolName, phone, address: schoolAddr, expiry: defaultExpiry, issue: defaultIssue, logo }) {
+function CardBack({ s, schoolName, tagline, phone, address: schoolAddr, expiry: defaultExpiry, issue: defaultIssue, logo }) {
   const exp = s.expiry || defaultExpiry;
   const iss = s.issueDate || defaultIssue;
 
   return (
     <CardShell>
-      <div style={{ position: "absolute", top: "3%", left: 0, right: 0, textAlign: "center", lineHeight: 1.12, padding: "0 4px" }}>
-        <div style={{ fontSize: "1.05em", fontWeight: 900, color: "#111", letterSpacing: 0.4, fontFamily: "'Arial Black', Arial, sans-serif" }}>{schoolName}</div>
-        <div style={{ fontSize: "0.52em", fontWeight: 800, color: "#111" }}>School System</div>
-        <div style={{ fontSize: "0.45em", fontWeight: 700, color: "#111" }}>(Playgroup to Matric)</div>
-      </div>
+      <CardHeading schoolName={schoolName} tagline={tagline} />
 
-      <div style={{ position: "absolute", top: "24%", left: 0, right: 0, textAlign: "center", padding: "0 8px", fontSize: "0.44em", fontWeight: 700, color: "#111", lineHeight: 1.45 }}>
-        <div><b>Contact:</b> {s.contact || "—"}</div>
-        <div><b>Address:</b> {s.address || "—"}</div>
-      </div>
-
-      <div style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-      }}>
+      <div
+        style={{
+          position: "absolute",
+          top: "22%",
+          left: 0,
+          right: 0,
+          bottom: "20%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          padding: "0 8px",
+        }}
+      >
         <SchoolCrest logo={logo} />
+        <div
+          style={{
+            marginTop: "1.5%",
+            alignSelf: "stretch",
+            textAlign: "left",
+            paddingLeft: "8%",
+            paddingRight: "6%",
+            fontSize: "0.62em",
+            fontWeight: 700,
+            color: "#111",
+            lineHeight: 1.48,
+          }}
+        >
+          <div><b>Contact:</b> {s.contact || "—"}</div>
+          <div><b>Address:</b> {s.address || "—"}</div>
+        </div>
       </div>
 
       <div style={{ position: "absolute", bottom: "2%", left: 0, right: 0 }}>
@@ -219,7 +372,7 @@ function A4Page({ students, pageNum, cfg }) {
       <div style={{ display: "flex", flexDirection: "column", gap: "2mm", flex: 1 }}>
         {students.map((s, i) => (
           <RotatedCardSlot key={"f" + i} slotW={slotW} slotH={slotH}>
-            <CardFront s={s} schoolName={cfg.schoolName} />
+            <CardFront s={s} schoolName={cfg.schoolName} tagline={cfg.tagline} />
           </RotatedCardSlot>
         ))}
         {Array.from({ length: CARDS_PER_PAGE - students.length }).map((_, i) => (
@@ -361,8 +514,19 @@ export default function App() {
   }, []);
 
   const printStyles = `
-    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Poppins:wght@500;600;700&display=swap');
     * { box-sizing: border-box; }
+    .card-heading {
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+    .card-heading__title {
+      font-variation-settings: normal;
+    }
+    .card-photo-sign {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
     @media print {
       .no-print { display: none !important; }
       body { background: #fff !important; margin: 0; padding: 0; }
