@@ -1,10 +1,23 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import * as XLSX from "xlsx";
 import cardBg from "./assets/cardbg .png";
 import schoolLogo from "./assets/logohappyday.png";
 import happydaySign from "./assets/happydaypsign.png";
 
 const CARDS_PER_PAGE = 5;
+
+// Typography — Arial Black title, Arial Bold body
+const CARD_HEADING_BASE_MM = "8.5mm";
+const CARD_FIELDS_MM = "2.9mm";
+const CARD_BODY_MM = "2.2mm";
+const CARD_BACK_INFO_MM = "2.8mm";
+const CARD_BLACK = "'Wide Latin', 'Arial Black', Impact, sans-serif";
+const CARD_STRIP_YELLOW = "#FFD700";
+const CARD_GOLD = "#CC8800";
+const CARD_DATE_ORANGE = "#CC4400";
+const CARD_ARIAL = "Arial, sans-serif";
+const CARD_BOLD = { fontFamily: CARD_ARIAL, fontWeight: 700 };
+const CARD_COLOR_RED = "#CC0000";
 
 const cardPrintStyle = {
   WebkitPrintColorAdjust: "exact",
@@ -13,7 +26,9 @@ const cardPrintStyle = {
 
 function CardShell({ children, rotated = false }) {
   return (
-    <div style={{
+    <div
+      className="id-card"
+      style={{
       width: "100%",
       height: "100%",
       position: "relative",
@@ -21,6 +36,8 @@ function CardShell({ children, rotated = false }) {
       borderRadius: 6,
       overflow: "hidden",
       fontSize: 14,
+      fontFamily: CARD_ARIAL,
+      containerType: "inline-size",
       transform: rotated ? "rotate(180deg)" : undefined,
       ...cardPrintStyle,
     }}>
@@ -43,12 +60,13 @@ function CardShell({ children, rotated = false }) {
   );
 }
 
-function SchoolCrest({ logo, size = 120 }) {
+function SchoolCrest({ logo, size = 90 }) {
+  const height = typeof size === "number" ? `${size}px` : size;
   return (
     <img
       src={logo || schoolLogo}
       alt=""
-      style={{ height: size, width: "auto", objectFit: "contain", display: "block", margin: "0 auto" }}
+      style={{ height, width: "auto", objectFit: "contain", display: "block", margin: "0 auto" }}
     />
   );
 }
@@ -56,7 +74,7 @@ function SchoolCrest({ logo, size = 120 }) {
 function StudentPhoto({ photo, name }) {
   const frameStyle = {
     width: "100%",
-    aspectRatio: "3/3.6",
+    aspectRatio: "35 / 45",
     border: "2px solid #fff",
     display: "block",
   };
@@ -93,11 +111,51 @@ function StudentPhoto({ photo, name }) {
   );
 }
 
-// Banner reference: 52px / 28px / 16px — scaled to card via mm (≈52px cap on ~55mm card)
-const CARD_HEADING_BASE_MM = "6.85mm";
-const CARD_TITLE_FONT = "'Montserrat', 'Arial Black', sans-serif";
-const CARD_SCHOOL_FONT = "'Poppins', 'Century Gothic', sans-serif";
-const CARD_TAGLINE_FONT = "'Poppins', Arial, sans-serif";
+function HeadingTitle({ text }) {
+  const boxRef = useRef(null);
+  const titleRef = useRef(null);
+
+  const fit = useCallback(() => {
+    const box = boxRef.current;
+    const el = titleRef.current;
+    if (!box || !el) return;
+    el.style.transform = "scale(1)";
+    const w = box.clientWidth;
+    const sw = el.scrollWidth;
+    if (w > 0 && sw > w) {
+      el.style.transform = `scale(${w / sw})`;
+      el.style.transformOrigin = "center top";
+    }
+  }, []);
+
+  useEffect(() => {
+    fit();
+    const ro = new ResizeObserver(fit);
+    if (boxRef.current) ro.observe(boxRef.current);
+    return () => ro.disconnect();
+  }, [fit, text]);
+
+  return (
+    <div ref={boxRef} style={{ width: "100%", overflow: "visible", minHeight: "1.15em" }}>
+      <div
+        ref={titleRef}
+        className="card-heading__title"
+        style={{
+          fontFamily: CARD_BLACK,
+          fontSize: CARD_HEADING_BASE_MM,
+          fontWeight: 400,
+          color: "#000",
+          letterSpacing: "0",
+          lineHeight: 1.15,
+          whiteSpace: "nowrap",
+          display: "inline-block",
+        }}
+      >
+        {text}
+      </div>
+    </div>
+  );
+}
 
 function CardHeading({ schoolName, tagline = "Playgroup to Matric", showStudentCard = false }) {
   const title = String(schoolName || "HAPPYDAY").toUpperCase();
@@ -108,39 +166,26 @@ function CardHeading({ schoolName, tagline = "Playgroup to Matric", showStudentC
       className="card-heading"
       style={{
         position: "absolute",
-        top: "2%",
-        left: "3%",
-        right: "3%",
+        top: "3%",
+        left: "4%",
+        right: "4%",
         textAlign: "center",
         fontSize: CARD_HEADING_BASE_MM,
-        lineHeight: 1,
+        lineHeight: 1.15,
         pointerEvents: "none",
+        zIndex: 2,
       }}
     >
-      <div
-        className="card-heading__title"
-        style={{
-          fontFamily: CARD_TITLE_FONT,
-          fontSize: "1em",
-          fontWeight: 900,
-          color: "#000",
-          letterSpacing: "-0.02em",
-          lineHeight: 0.88,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {title}
-      </div>
+      <HeadingTitle text={title} />
       <div
         className="card-heading__school"
         style={{
-          fontFamily: CARD_SCHOOL_FONT,
-          fontSize: "0.538em",
-          fontWeight: 600,
+          ...CARD_BOLD,
+          fontSize: "0.46em",
           color: "#000",
-          letterSpacing: "0.06em",
-          lineHeight: 0.94,
-          marginTop: "-0.04em",
+          letterSpacing: "0.03em",
+          lineHeight: 1.1,
+          marginTop: "0.04em",
         }}
       >
         School System
@@ -149,12 +194,11 @@ function CardHeading({ schoolName, tagline = "Playgroup to Matric", showStudentC
         <div
           className="card-heading__tagline"
           style={{
-            fontFamily: CARD_TAGLINE_FONT,
-            fontSize: "0.308em",
-            fontWeight: 500,
+            ...CARD_BOLD,
+            fontSize: "0.32em",
             color: "#000",
-            lineHeight: 0.98,
-            marginTop: "0.06em",
+            lineHeight: 1.1,
+            marginTop: "0.08em",
           }}
         >
           {range}
@@ -164,13 +208,12 @@ function CardHeading({ schoolName, tagline = "Playgroup to Matric", showStudentC
         <div
           className="card-heading__badge"
           style={{
-            fontFamily: CARD_SCHOOL_FONT,
-            fontSize: "0.346em",
-            fontWeight: 600,
-            color: "#9a2f0a",
-            letterSpacing: "0.05em",
-            lineHeight: 1,
-            marginTop: "0.14em",
+            ...CARD_BOLD,
+            fontSize: "0.36em",
+            color: CARD_COLOR_RED,
+            letterSpacing: "0.02em",
+            lineHeight: 1.1,
+            marginTop: "0.1em",
           }}
         >
           STUDENT CARD
@@ -194,6 +237,14 @@ const SAMPLE = [
 
 function CardStudentFields({ name, fname, cls }) {
   const labelCol = "5.6em";
+  const rowStyle = {
+    display: "flex",
+    alignItems: "baseline",
+    ...CARD_BOLD,
+    fontSize: CARD_FIELDS_MM,
+    color: "#000",
+    lineHeight: 1.15,
+  };
 
   return (
     <div
@@ -203,11 +254,6 @@ function CardStudentFields({ name, fname, cls }) {
         bottom: "3.2%",
         left: "6.5%",
         right: "4%",
-        fontFamily: CARD_SCHOOL_FONT,
-        fontSize: "3.15mm",
-        fontWeight: 700,
-        color: "#000",
-        lineHeight: 1,
       }}
     >
       {[
@@ -218,13 +264,12 @@ function CardStudentFields({ name, fname, cls }) {
         <div
           key={label}
           style={{
-            display: "flex",
-            alignItems: "baseline",
-            marginBottom: label === "Class:" ? 0 : "0.55em",
+            ...rowStyle,
+            marginBottom: label === "Class:" ? 0 : "0.5em",
           }}
         >
           <span style={{ width: labelCol, flexShrink: 0 }}>{label}</span>
-          <span style={{ paddingLeft: "0.35em" }}>{value}</span>
+          <span style={{ paddingLeft: "0.4em" }}>{value}</span>
         </div>
       ))}
     </div>
@@ -237,11 +282,24 @@ function CardFront({ s, schoolName, tagline }) {
     <CardShell>
       <CardHeading schoolName={schoolName} tagline={tagline} showStudentCard />
 
-      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: "52%", textAlign: "center" }}>
+      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: "61%", textAlign: "center" }}>
         <StudentPhoto photo={s.photo} name={s.name} />
       </div>
 
-      <div style={{ position: "absolute", top: "60.5%", left: 0, right: 0, textAlign: "center", fontSize: "0.42em", fontWeight: 700, color: "#cc0000", fontStyle: "italic" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: "62%",
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          fontFamily: "'Comic Sans MS', 'Comic Neue', cursive",
+          fontSize: CARD_BODY_MM,
+          fontWeight: 400,
+          fontStyle: "italic",
+          color: CARD_COLOR_RED,
+        }}
+      >
         Issuing Authority
       </div>
 
@@ -255,50 +313,99 @@ function CardBack({ s, schoolName, tagline, phone, address: schoolAddr, expiry: 
   const iss = s.issueDate || defaultIssue;
 
   return (
-    <CardShell>
+    <CardShell rotated>
       <CardHeading schoolName={schoolName} tagline={tagline} />
 
       <div
+        className="card-back-body"
         style={{
           position: "absolute",
-          top: "22%",
+          top: "20%",
           left: 0,
           right: 0,
-          bottom: "20%",
+          bottom: "13%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "flex-start",
-          padding: "0 8px",
+          paddingTop: "1%",
+          zIndex: 2,
         }}
       >
-        <SchoolCrest logo={logo} />
+        <SchoolCrest logo={logo} size="26mm" />
         <div
+          className="card-back-info"
           style={{
-            marginTop: "1.5%",
+            marginTop: "4%",
             alignSelf: "stretch",
             textAlign: "left",
             paddingLeft: "8%",
-            paddingRight: "6%",
-            fontSize: "0.62em",
-            fontWeight: 700,
-            color: "#111",
-            lineHeight: 1.48,
+            paddingRight: "8%",
+            ...CARD_BOLD,
           }}
         >
-          <div><b>Contact:</b> {s.contact || "—"}</div>
-          <div><b>Address:</b> {s.address || "—"}</div>
+          <div
+            style={{
+              fontSize: CARD_BACK_INFO_MM,
+              lineHeight: 1.48,
+              color: "#000",
+              marginBottom: "0.25em",
+            }}
+          >
+            Contact: {s.contact || "—"}
+          </div>
+          <div
+            style={{
+              fontSize: CARD_BACK_INFO_MM,
+              lineHeight: 1.48,
+              color: "#000",
+            }}
+          >
+            Address: {s.address || "—"}
+          </div>
         </div>
       </div>
 
-      <div style={{ position: "absolute", bottom: "2%", left: 0, right: 0 }}>
-        <div style={{ background: "#111", color: "#FFD700", textAlign: "center", padding: "3px 4px", fontSize: "0.42em", fontWeight: 700, lineHeight: 1.4 }}>
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 3 }}>
+        <div
+          className="card-info-strip"
+          style={{
+            background: "#000",
+            color: CARD_STRIP_YELLOW,
+            textAlign: "center",
+            padding: "2px 4px 3px",
+            ...CARD_BOLD,
+            fontSize: CARD_BODY_MM,
+            lineHeight: 1.35,
+          }}
+        >
           <div>{schoolAddr}</div>
           <div>Ph. {phone}</div>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 8px 0", fontSize: "0.42em", fontWeight: 700, color: "#cc0000" }}>
-          <span>Issue: {iss}</span>
-          <span>Expiry: {exp}</span>
+        <div
+          className="card-date-strip"
+          style={{
+            background: CARD_GOLD,
+            color: CARD_DATE_ORANGE,
+            textAlign: "center",
+            padding: "2px 6px",
+            ...CARD_BOLD,
+            fontSize: CARD_BODY_MM,
+            lineHeight: 1.3,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "0 8%",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span>Issue: {iss}</span>
+            <span>Expiry: {exp}</span>
+          </div>
         </div>
       </div>
     </CardShell>
@@ -316,7 +423,7 @@ function RotatedCardSlot({ children, slotW, slotH }) {
       justifyContent: "center",
       overflow: "hidden",
     }}>
-      <div style={{ width: slotH, height: slotW, transform: "rotate(-90deg)" }}>
+      <div style={{ width: slotH, height: slotW, transform: "rotate(-90deg)", transformOrigin: "center center" }}>
         {children}
       </div>
     </div>
@@ -514,14 +621,10 @@ export default function App() {
   }, []);
 
   const printStyles = `
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Poppins:wght@500;600;700&display=swap');
     * { box-sizing: border-box; }
-    .card-heading {
+    .card-heading, .card-student-fields, .card-info-strip, .card-back-info {
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
-    }
-    .card-heading__title {
-      font-variation-settings: normal;
     }
     .card-photo-sign {
       -webkit-print-color-adjust: exact;
